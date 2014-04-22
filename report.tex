@@ -164,7 +164,7 @@ test set.
     full && 3.17/8.97 & 2.59/7.33 && 1.61/4.75 & 1.47/4.23\\
   \end{tabular}
   \caption{Test error rates for combinations of tuning, normalization and
-  datasets (written as WER/SER). All tuned results were obtained with the parameters from Part 1.}\label{tab:wer-comb}
+  datasets (written as WER/SER). All tuned results were obtained with the optimal parameters from Part 1.}\label{tab:wer-comb}
 \end{table*}
 
 %\begin{table*}\centering
@@ -196,14 +196,14 @@ Table~\ref{tab:wer-param}.
     mixed && 20 & 0.75 & 256 & 1:1:19 & 19 && 1.7 & 4.95\\
     full && 20 & 1.5 & 2048 & 1:1:19 & 10 && 0.83 & 2.57\\
   \end{tabular}
-  \caption{Best parameters and test error rates for each training set.}\label{tab:wer-param}
+  \caption{Best parameters and corresponding test error rates for each training set.}\label{tab:wer-param}
 \end{table*}
 
 These results indicate a few trends. First, the more data we add and the more
 representative data we have, the more Gaussians we can use to estimate the
 model. Also, we got better results in case we set the last iteration at which
-the number of Gaussians is increased to a lower value for the more general data
-sets 3 and 4. This indicates that if the training data is more representative,
+the number of Gaussians is increased to a lower value for the larger data 4. 
+This indicates that if we have more training data,
 then we want to fit the Gaussians for more iterations to the training data
 instead of generating more and more Gaussians that we only fit for fewer
 iterations. Lastly, in case we have better data to train the phones on, it seems
