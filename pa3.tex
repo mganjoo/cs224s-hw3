@@ -210,11 +210,79 @@ sets 3 and 4. This indicates that if the training data is more representative,
 then we want to fit the gaussians for more iterations to the training data
 instead of generating more and more gaussians that we only fit for fewer
 iterations. Lastly, in case we have better data to train the phones on, it seems
-to help to increase the boost_silence parameter.
+to help to increase the \texttt{boost\_silence} parameter.
 
 By using a larger and  more representative data set we were able to lower the
 WER to 0.83. At this error rate, a bank customer would have to repeat a 16-digit
 number on average in only 12\% of the cases which makes the system a lot more
 practical.
+
+\subsection{Adding delta features}
+
+The final enhancement to our model was to enable an additional training step:
+the generation of delta features. Since delta features capture changes in
+formant and signal nature from frame to frame, and can provide useful cues
+towards phone identity, we expected them to provide improved performance.
+
+We tuned two parameters in the delta training step: the number of initial
+Gaussians to start with (\texttt{numleaves}) and the number of final Gaussians
+(\texttt{totgauss}). In general, we found that a much larger number of final
+Gaussians was required for an improvement over the simple monophone model
+(values of \texttt{totgauss} smaller than the ones chosen previously obviously
+resulted in a worse WER).
+
+We also observed a diminishing returns effect with perfecting the values of the
+delta model parameters, in that the marginal improvement obtained with higher
+values of parameters was not significant.
+
+Eventually, we found that the best choice for the parameters was:
+\begin{itemize}
+  \item Maximum number of Gaussians (\texttt{totgauss}): 8000
+  \item Initial number of leaves (\texttt{numleaves}): 100
+\end{itemize}
+
+With these parameters, we obtained a slight improvement in our system's
+performance, as summarized in Table~\ref{tab:wer-delta}.
+
+\begin{table}[h]\centering
+  \begin{tabular}{lcc}
+    \toprule
+    & train & test \\
+    \midrule
+    WER & 0.17 & 0.54 \\
+    SER & 0.55 & 1.7 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Error rates for model with delta features}\label{tab:wer-delta}
+\end{table}
+
+\subsection{Benefits of using delta features}
+To determine qualitatively where delta features helped, we compared the output
+of the monophone-only model, the model including delta features, and the gold
+set of decodings in the test set. We made a few interesting observations:
+
+\begin{itemize}
+  \item With delta features, the model was able to differentiate ``1'' and ``9''
+  better in a few cases. For example, the gold sequence ``7 7 8 9 7 1 9'' was
+  mistakenly decoded as ``7 7 8 9 7 1 1'' by the monophone-only model, but was
+  correctly decoded by the delta-enhanced model. We surmise that the ability to
+  capture formant changes across frames allowed the latter model to observe the
+  forceful dental ``release'' at the beginning of ``nine'', even if the vowel
+  pronunciation may have sounded similar to ``one''.
+  \item The delta-enhanced model was also able to distinguish sequences of
+  similar, vowel-only phones better. For example, in a sequence involving two
+  consecutive ``oh'' digits (``4 2 8 0 0 9''), the monophone-only model observed
+  only one digit, while the delta-enhanced model observed both. Again, this is
+  probably due to the improved ability to capture the subtle formant change
+  between two utterances of ``oh''.
+  \item However, delta features did not always improve recognizability. The
+  delta-enhanced model inserted an extraneous ``8'' in the sequence ``3 5 4 4 z
+  6 z'', making it ``3 5 4 4 8 z 6 z''. It appears that the same ability to
+  better identify dental fricatives at the beginning of a phone that allowed the
+  model to distinguish ``one'' and ``nine'' caused the model to be overly
+  cautious and detect a transition from an ``eight'', which ends in a dental
+  phone, to a ``zero'', which begins with a sibilant.
+\end{itemize}
+
 
 \end{document}
