@@ -133,13 +133,12 @@ the following training sets:
   \item 55 male and 57 female speakers.
 \end{inparaenum}
 
-The results are presented in Table~\ref{tab:wer-all}\@. First, we can see that training only
+The results are presented in Table~\ref{tab:wer-comb}\@. First, we can see that training only
 on female speakers seems to work better than training only on male speakers.
-There are two possible explanations for that. Either the test set contains
+There are two likely explanations for that. Either the test set contains
 more female speakers than male speakers or the set of female speakers has more
 variability than the set of male speakers. In such a small random sample it is
-not unlikely that there is for example a greater variety of accents in the
-female sample.
+not unlikely that there is for example a greater variety of dialects in one of them.
 
 Further, we can see that including both male and female speakers decreases the
 error rate by more than 70\% compared to only using female speakers. This is not
@@ -154,19 +153,34 @@ the training data is well suited to train a model that works well on a large
 test set.
 
 \begin{table*}\centering
-  \begin{tabular}{@{}rcrrcrrcrrr@{}}\toprule%
-    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{train}
-    & \phantom{a} & \multicolumn{6}{c}{test} \\
-    \cmidrule{3-4} \cmidrule{6-11}
-    && WER & SER && WER & SER && Ins & Del & Sub\\ \midrule%
-    male && 1.55 & 1.82 && 6.79 & 14.86 && 367 & 376 & 1198\\
-    female && 0.76 & 2.11 && 5.35 & 12.34 && 204 & 420 & 905\\
-    mixed && 0.55 & 1.82 && 1.51 & 4.57 && 116 & 200 & 115\\
-    full && 1.04 & 3.11 && 1.47 & 4.23 && 138 & 128 & 154\\
-    \bottomrule
+  \begin{tabular}{@{}rcrrcrr@{}}\toprule%
+    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{not tuned}
+    & \phantom{a} & \multicolumn{2}{c}{tuned}\\
+    \cmidrule{3-4} \cmidrule{6-7}
+    && no norm. & norm. && no norm. & norm.\\ \midrule%
+    male && 12.32/24.39 & 9.50/20.49 && 9.18/18.95 & 6.79/14.86\\
+    female && 9.06/20.41 & 7.7/17.61 && 6.39/15.03 & 5.35/12.34\\
+    mixed && 3.99/11.36 & 3.27/9.29 && 1.8/5.16 & 1.51/4.57\\
+    full && 3.17/8.97 & 2.59/7.33 && 1.61/4.75 & 1.47/4.23\\
   \end{tabular}
-  \caption{Error rates for all datasets.}\label{tab:wer-all}
+  \caption{Test error rates for combinations of tuning, normalization and
+  datasets (written as WER/SER). All tuned results were obtained with the parameters from Part 1.}\label{tab:wer-comb}
 \end{table*}
+
+%\begin{table*}\centering
+%  \begin{tabular}{@{}rcrrcrrcrrr@{}}\toprule%
+%    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{train}
+%    & \phantom{a} & \multicolumn{6}{c}{test} \\
+%    \cmidrule{3-4} \cmidrule{6-11}
+%    && WER & SER && WER & SER && Ins & Del & Sub\\ \midrule%
+%    male && 1.55 & 1.82 && 6.79 & 14.86 && 367 & 376 & 1198\\
+%    female && 0.76 & 2.11 && 5.35 & 12.34 && 204 & 420 & 905\\
+%    mixed && 0.55 & 1.82 && 1.51 & 4.57 && 116 & 200 & 115\\
+%    full && 1.04 & 3.11 && 1.47 & 4.23 && 138 & 128 & 154\\
+%    \bottomrule
+%  \end{tabular}
+%  \caption{Error rates for all datasets.}\label{tab:wer-all}
+%\end{table*}
 
 We also did some parameter tuning for test sets 2 through 4. The optimal
 parameters and the corresponding test WER and SER are presented in
@@ -182,7 +196,7 @@ Table~\ref{tab:wer-param}.
     mixed && 20 & 0.75 & 256 & 1:1:19 & 19 && 1.7 & 4.95\\
     full && 20 & 1.5 & 2048 & 1:1:19 & 10 && 0.83 & 2.57\\
   \end{tabular}
-  \caption{Error rates with various parameters tuned.}\label{tab:wer-param}
+  \caption{Best parameters and test error rates for each training set.}\label{tab:wer-param}
 \end{table*}
 
 These results indicate a few trends. First, the more data we add and the more
@@ -202,20 +216,7 @@ practical.
 
 % TODO: add stuff about combinations: Table~\ref{tab:wer-comb} shows ...
 
-\begin{table*}\centering
-  \begin{tabular}{@{}rcrrcrr@{}}\toprule%
-    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{not tuned}
-    & \phantom{a} & \multicolumn{2}{c}{tuned}\\
-    \cmidrule{3-4} \cmidrule{6-7}
-    && no norm. & norm. && no norm. & norm.\\ \midrule%
-    male && 12.32/24.39 & 9.50/20.49 && 9.18/18.95 & 6.79/14.86\\
-    female && 9.06/20.41 & 7.7/17.61 && 6.39/15.03 & 5.35/12.34\\
-    mixed && 3.99/11.36 & 3.27/9.29 && 1.8/5.16 & 1.51/4.57\\
-    full && 3.17/8.97 & 2.59/7.33 && 1.61/4.75 & 1.47/4.23\\
-  \end{tabular}
-  \caption{Error rates for combinations of tuning, normalization and
-  datasets (written as WER/SER).}\label{tab:wer-comb}
-\end{table*}
+
 
 \section{Adding triphone features}
 
