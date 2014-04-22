@@ -2,6 +2,8 @@
 \usepackage[margin=0.6in]{geometry}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{graphicx}
+
 
 \setlength{\columnsep}{1cm}
 
@@ -270,5 +272,36 @@ set of decodings in the test set. We made a few interesting observations:
   sound, to a ``zero'', which begins with a sibilant.
 \end{itemize}
 
+\section{Extra Credit: Influence of Speaker Gender in the Training Set}
+In order to confirm our intuitions from Section 3 that a system trained only on  male 
+or only on female speakers makes more mistakes on the other gender, we took the output 
+of our systems trained with training set 1, 2 and 3 and counted for each speaker 
+the number of sentences which contained at least one error. Then we mapped the speaker 
+IDs to their gender using the mapping information in the TIDIGITS corpus. Figures 1-3 show 
+the distributions of the sentence error count for each gender for the different training sets. 
+These figures exactly match the intuitions we gave earlier: If we train only on male speakers, 
+we make significantly more errors on female speech and vice versa. Further, if we 
+train on female and male speakers, there is hardly a gender difference in terms of the
+sentence error distributions. 
+
+In Figure \ref{fig:mixed}, we can see that there are still some speakers with very high error counts.
+These cases can be easily explained if we look at the dialect of the speaker. All the speakers with
+very high error rates have very strong dialects, namely African-American Vernacular English, a Southern
+dialect or a Chicago dialect which is known to have the northern cities vowel shift.
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{male_only.pdf}
+\caption{\label{fig:male} Sentence error distributions of our system trained only on male speakers.}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{female_only.pdf}
+\caption{\label{fig:female} Sentence error distributions of our system trained only on female speakers. }
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\columnwidth]{mixed.pdf}
+\caption{\label{fig:mixed} Sentence error distributions of our system trained on speakers of both genders. }
+\end{figure}
 
 \end{document}
