@@ -156,7 +156,7 @@ test set.
 \begin{table*}\centering
   \begin{tabular}{@{}rcrrcrrcrrr@{}}\toprule%
     \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{train}
-    & \phantom{a} & \multicolumn{6}{c}{train} \\
+    & \phantom{a} & \multicolumn{6}{c}{test} \\
     \cmidrule{3-4} \cmidrule{6-11}
     && WER & SER && WER & SER && Ins & Del & Sub\\ \midrule%
     male && 1.55 & 1.82 && 6.79 & 14.86 && 367 & 376 & 1198\\
@@ -199,6 +199,23 @@ By using a larger and  more representative data set we were able to lower the
 WER to 0.83. At this error rate, a bank customer would have to repeat a 16-digit
 number on average in only 12\% of the cases which makes the system a lot more
 practical.
+
+% TODO: add stuff about combinations: Table~\ref{tab:wer-comb} shows ...
+
+\begin{table*}\centering
+  \begin{tabular}{@{}rcrrcrr@{}}\toprule%
+    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{not tuned}
+    & \phantom{a} & \multicolumn{2}{c}{tuned}\\
+    \cmidrule{3-4} \cmidrule{6-7}
+    && no norm. & norm. && no norm. & norm.\\ \midrule%
+    male && 12.32/24.39 & 9.50/20.49 && 9.18/18.95 & 6.79/14.86\\
+    female && 9.06/20.41 & 7.7/17.61 && 6.39/15.03 & 5.35/12.34\\
+    mixed && 3.99/11.36 & 3.27/9.29 && 1.8/5.16 & 1.51/4.57\\
+    full && 3.17/8.97 & 2.59/7.33 && 1.61/4.75 & 1.47/4.23\\
+  \end{tabular}
+  \caption{Error rates for combinations of tuning, normalization and
+  datasets (written as WER/SER).}\label{tab:wer-comb}
+\end{table*}
 
 \section{Adding triphone features}
 
