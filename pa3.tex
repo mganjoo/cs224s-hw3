@@ -1,7 +1,9 @@
-\documentclass[11pt]{article}
+\documentclass[twocolumn, 11pt]{article}
 \usepackage[margin=0.6in]{geometry}
 \usepackage{booktabs}
 \usepackage{multirow}
+
+\setlength{\columnsep}{1cm}
 
 \title{CS224S Assignment 3}
 \author{Milind Ganjoo\\\texttt{mganjoo@cs.stanford.edu}
@@ -18,29 +20,30 @@ Sebastian Schuster\\\texttt{sebschu@stanford.edu}}
 
 In part 1 we tried various values for the five parameters to determine the
 optimal values for the male-only training set with using Mel frequency
-cepstral coefficients with no normalization or delta coefficients (as these
-are explored in later parts of the assignment). In this section we describe
+cepstral coefficients with no normalization or delta coefficients. In this section we describe
 our method for tuning the parameters, present the results, and include a
 discussion as to why certain parameter adjustments showed improved test
 results with respect to the baseline system.
 
-To initially gain a sense of the performance with respect to each parameter,
-we went through each parameter and adjusted the value while fixing the others.
-We also adjusted the run.sh script to print out the training error to give us
-insight into whether the model was over- or underfitting the training set. As
-expected, we observed dependencies between certain parameters and while moving
-forward we would tune these dependent parameters together.
+%To initially gain a sense of the performance with respect to each parameter,
+%we went through each parameter and adjusted the value while fixing the others.
+%We also adjusted the run.sh script to print out the training error to give us
+%insight into whether the model was over- or underfitting the training set. As
+%expected, we observed dependencies between certain parameters and while moving
+%forward we would tune these dependent parameters together.
 
-\subsection{Number of iterations}
+\paragraph{Number of iterations}
 We tried 10, 20 and 30 iterations for the found 20 iterations to show the
 lowest word and sentence error rate. Ten iterations was not sufficient for the
 Gaussian HMM model to converge, whereas after thirty iterations the
-improvement seen at twenty has plateaued and begun to worsen. This is
-confirmed by noting a slight increase in the test error and decrease in train
-error for both WER and SER.\@
+improvement seen at twenty has plateaued and begun to worsen. 
 
-\subsection{Boost silence likelihoods}
-The default value for this parameter was 2.0, indicating no special treatment
+%This is
+%confirmed by noting a slight increase in the test error and decrease in train
+%error for both WER and SER.\@
+
+\paragraph{Boost silence likelihoods}
+The default value for this parameter was 1, indicating no special treatment
 being given to the likelihoods of GMMs corresponding to the silence phones. By
 increasing this parameter, we are indicating it is more likely for a silence
 phone to occur, and a decrease in the parameter makes the model less likely to
@@ -50,16 +53,16 @@ to halving the weights for all models that correspond to the silence
 decreased.
 
 The silence class is of very different nature than the other phone classes.
-When we have a dataset that fits the test set well we can rely on the silence
-models to be accurately trained.  When we train the phones well, we  need not
-reduce the silence likelihood. However, since we do not have much training
+When we train the phones well, we need not to reduce the silence likelihood. 
+However, since we do not have much training
 data in this scenario and we know the training data does not fit the test data
 well, because we are only training on males and the test set is mixed gender
-(as is discussed later), reducing the likelihood helps the system. It
+(as is discussed later), reducing the likelihood helps the system, as otherwise
+a lot of phones get mapped to the less distinct silence class. It
 essentially says only choose silence if you are extra certain it is a silence
 segment.
 
-\subsection{Total Gaussians}
+\paragraph{Total Gaussians}
 We experimented with Gaussian sizes between 100 and 612, finding 256 performed
 the best. The total number of Gaussians is the largest possible number of
 Gaussians in the GMM which models each subphone. Too few Gaussians (e.g 100)
@@ -69,15 +72,14 @@ except totgauss which is doubled, the training error decreases for both WER by
 0.04 and 0.13 while the test error increases by 3.53 and 4.14---confirming
 that we are indeed overfitting.
 
-\subsection{Max Iter Inc}
-For the male-only configuration, we found that allowing the number of
-Gaussians to be increased until the final iteration performed the best. In
-this training scenario we have limited data, so when the number of Gaussians
-are split they already are a good representation of the data and do not need
-more iterations to be re-fit. Whichever number of iterations we chose for the
-system, we set \texttt{max\_iter\_inc} to one value less.
+\paragraph{Max Iter Inc}
+We found that allowing the number of Gaussians to be increased until the 
+final iteration performed the best. In this training scenario we have limited data, 
+so when the number of Gaussians are split they are a better representation 
+of the data compared to fitting them perfectly to the training data and do not 
+need more iterations to be re-fit. 
 
-\subsection{Realign Iters}
+\paragraph{Realign Iters}
 We found that regardless of the other parameter values, the system performs
 best when the forced alignment is performed at every iteration. This is not
 surprising as it repeatedly re-estimating the HMM parameters ensures the HMMs
@@ -85,18 +87,10 @@ are fitting the training data as closely as possible. Whichever number of
 iterations we chose for the system, we did forced alignment at every
 iteration.
 
-\subsection{Final Adjustments}
+\paragraph{Final Adjustments}
 Once we determined the best value for a parameter keeping the others fixed, we
 adjusted the other parameters while keeping the given one at its best value.
-By doing this we found the best performing setup to be:
-
-\begin{itemize}
-  \item 20 iterations
-  \item Silence boosted by 0.5
-  \item Maximum of 256 Gaussians
-  \item Gaussians allowed to split until iteration 19
-  \item Realignment iterations: $[1, 2, \ldots, 19]$ (after every iteration)
-\end{itemize}
+By doing this we found the best performing setup to be  20 iterations, silence boosted by 0.5, a maximum of 256 Gaussians, Gaussians allowed to split until iteration 19 and realignment iterations $[1, 2, \ldots, 19]$ (after every iteration).
 
 This gave us the error rates summarized in Table~\ref{tab:wer-mono}. On the test
 set, this model gave 554 insertions, 383 deletions, and 1688 substitutions.
@@ -140,14 +134,7 @@ different and more training data.
 \section{Different training data}
 
 We first used our optimal parameters from Part 1 and trained new models using
-the following training sets:
-
-\begin{itemize}
-  \item 10 male speakers
-  \item 10 female speakers
-  \item 5 male and 5 female speakers
-  \item 55 male and 57 female speakers
-\end{itemize}
+the following training sets:  (1) 10 male speakers, (2)  10 female speakers, (3) 5 male and 5 female speakers, and (4) 55 male and 57 female speakers.
 
 The results are presented in Table~\ref{tab:wer-all}\@. First, we can see that training only
 on female speakers seems to work better than training only on male speakers.
@@ -169,12 +156,11 @@ that the training error and the test error are almost the same indicates that
 the training data is well suited to train a model that works well on a large
 test set.
 
-\begin{table}\centering
+\begin{table*}\centering
   \begin{tabular}{@{}rcrrcrrcrrr@{}}\toprule%
     \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{train}
-    & \phantom{a} & \multicolumn{2}{c}{test} & \phantom{a}
-    & \multicolumn{3}{c}{changes}\\
-    \cmidrule{3-4} \cmidrule{6-7} \cmidrule{9-11}
+    & \phantom{a} & \multicolumn{6}{c}{train} \\
+    \cmidrule{3-4} \cmidrule{6-11}
     && WER & SER && WER & SER && Ins & Del & Sub\\ \midrule%
     male && 1.55 & 1.82 && 6.79 & 14.86 && 367 & 376 & 1198\\
     female && 0.76 & 2.11 && 5.35 & 12.34 && 204 & 420 & 905\\
@@ -183,24 +169,24 @@ test set.
     \bottomrule
   \end{tabular}
   \caption{Error rates for all datasets}\label{tab:wer-all}
-\end{table}
+\end{table*}
 
 We also did some parameter tuning for test sets 2 through 4. The optimal
 parameters and the corresponding test WER and SER are presented in
 Table~\ref{tab:wer-param}.
 
-\begin{table}\centering
+\begin{table*}\centering
   \begin{tabular}{@{}rcrrrrrcrr@{}}\toprule%
     Dataset & \phantom{a} & \texttt{num\_iterations} & \texttt{boost\_silence}
     & \texttt{totgauss} & \texttt{realign\_iters} & \texttt{max\_iter\_inc}
     & \phantom{a} & WER & SER\\ \midrule%
-    1 && 20 & 0.5 & 256 & 1:1:19 & 19 && 6.79 & 14.86\\
-    2 && 20 & 0.5 & 512 & 1:1:19 & 19 && 5.2 & 11.72\\
-    3 && 20 & 0.75 & 256 & 1:1:19 & 19 && 1.7 & 4.95\\
-    4 && 20 & 1.5 & 2048 & 1:1:19 & 10 && 0.83 & 2.57\\
+    male && 20 & 0.5 & 256 & 1:1:19 & 19 && 6.79 & 14.86\\
+    female && 20 & 0.5 & 512 & 1:1:19 & 19 && 5.2 & 11.72\\
+    mixed && 20 & 0.75 & 256 & 1:1:19 & 19 && 1.7 & 4.95\\
+    full && 20 & 1.5 & 2048 & 1:1:19 & 10 && 0.83 & 2.57\\
   \end{tabular}
   \caption{Error rates with various parameters tuned}\label{tab:wer-param}
-\end{table}
+\end{table*}
 
 These results indicate a few trends. First, the more data we add and the more
 representative data we have, the more gaussians we can use to estimate the
