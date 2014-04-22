@@ -1,0 +1,220 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\title{CS224S Assignment 3}
+\author{Milind Ganjoo\\\texttt{mganjoo@cs.stanford.edu}
+\and%
+Stephanie Lynne Pancoast\\\texttt{pancoast@stanford.edu}
+\and%
+Sebastian Schuster\\\texttt{sebschu@stanford.edu}}
+\date{}
+
+\begin{document}
+
+\maketitle
+\section{Improving the monophone acoustic model}
+
+In part 1 we tried various values for the five parameters to determine the
+optimal values for the male-only training set with using Mel frequency
+cepstral coefficients with no normalization or delta coefficients (as these
+are explored in later parts of the assignment). In this section we describe
+our method for tuning the parameters, present the results, and include a
+discussion as to why certain parameter adjustments showed improved test
+results with respect to the baseline system.
+
+To initially gain a sense of the performance with respect to each parameter,
+we went through each parameter and adjusted the value while fixing the others.
+We also adjusted the run.sh script to print out the training error to give us
+insight into whether the model was over- or underfitting the training set. As
+expected, we observed dependencies between certain parameters and while moving
+forward we would tune these dependent parameters together.
+
+\subsection{Number of iterations}
+We tried 10, 20 and 30 iterations for the found 20 iterations to show the
+lowest word and sentence error rate. Ten iterations was not sufficient for the
+Gaussian HMM model to converge, whereas after thirty iterations the
+improvement seen at twenty has plateaued and begun to worsen. This is
+confirmed by noting a slight increase in the test error and decrease in train
+error for both WER and SER.\@
+
+\subsection{Boost silence likelihoods}
+The default value for this parameter was 2.0, indicating no special treatment
+being given to the likelihoods of GMMs corresponding to the silence phones. By
+increasing this parameter, we are indicating it is more likely for a silence
+phone to occur, and a decrease in the parameter makes the model less likely to
+choose a silence phone. We tried values between 0.3 and 1.5, and found the
+best performance results by setting \texttt{boost\_silence} to 0.5. This is equivalent
+to halving the weights for all models that correspond to the silence
+decreased.
+
+The silence class is of very different nature than the other phone classes.
+When we have a dataset that fits the test set well we can rely on the silence
+models to be accurately trained.  When we train the phones well, we  need not
+reduce the silence likelihood. However, since we do not have much training
+data in this scenario and we know the training data does not fit the test data
+well, because we are only training on males and the test set is mixed gender
+(as is discussed later), reducing the likelihood helps the system. It
+essentially says only choose silence if you are extra certain it is a silence
+segment.
+
+\subsection{Total Gaussians}
+We experimented with Gaussian sizes between 100 and 612, finding 256 performed
+the best. The total number of Gaussians is the largest possible number of
+Gaussians in the GMM which models each subphone. Too few Gaussians (e.g 100)
+under fits the data, while too large a value (e.g. 612) overfits. Comparing a
+system with the optimal parameters and one with all the optimal parameters
+except totgauss which is doubled, the training error decreases for both WER by
+0.04 and 0.13 while the test error increases by 3.53 and 4.14---confirming
+that we are indeed overfitting.
+
+\subsection{Max Iter Inc}
+For the male-only configuration, we found that allowing the number of
+Gaussians to be increased until the final iteration performed the best. In
+this training scenario we have limited data, so when the number of Gaussians
+are split they already are a good representation of the data and do not need
+more iterations to be re-fit. Whichever number of iterations we chose for the
+system, we set \texttt{max\_iter\_inc} to one value less.
+
+\subsection{Realign Iters}
+We found that regardless of the other parameter values, the system performs
+best when the forced alignment is performed at every iteration. This is not
+surprising as it repeatedly re-estimating the HMM parameters ensures the HMMs
+are fitting the training data as closely as possible. Whichever number of
+iterations we chose for the system, we did forced alignment at every
+iteration.
+
+\subsection{Final Adjustments}
+Once we determined the best value for a parameter keeping the others fixed, we
+adjusted the other parameters while keeping the given one at its best value.
+By doing this we found the best performing setup to be:
+
+\begin{itemize}
+  \item 20 iterations
+  \item Silence boosted by 0.5
+  \item Maximum of 256 Gaussians
+  \item Gaussians allowed to split until iteration 19
+  \item Realignment iterations: $[1, 2, \ldots, 19]$ (after every iteration)
+\end{itemize}
+
+This gave us the error rates summarized in Table~\ref{tab:wer-mono}. On the test
+set, this model gave 554 insertions, 383 deletions, and 1688 substitutions.
+
+\begin{table}[h]\centering
+  \begin{tabular}{lcc}
+    \toprule
+    & train & test \\
+    \midrule
+    WER & 0.67 & 9.18 \\
+    SER & 2.21 & 18.96 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Error rates for improved monophone acoustic
+  model}\label{tab:wer-mono}
+\end{table}
+
+\section{Improving feature extraction}
+
+In part 2 we improved feature extraction by adding a normalization step after
+the extraction was done to filter out environmental noise. With the male-only
+training set this step lowers both the WER and the SER by approximately a
+quarter to 6.79\% and 14.86\%, respectively.
+
+While the number of deletions did not change a lot, we saw a significant drop
+in the number of insertions and substitutions. This indicates that, on the one
+hand, background noise is less frequently mapped to a phone and, on the other
+hand, that the model is better at distinguishing between phones as without the
+noise it should be easier to map the features to a certain phone.
+
+We also tried some other model parameter combinations but consistently got the
+best results with the parameters from Step 1.
+
+By optimizing the model parameters and by including the noise filtering step,
+we were able to lower the error rate by almost 50\% over our baseline. However,
+a seemingly low WER of 6.79\% still implies that one has to repeat a 16 digit
+number sequence approximately 67.5\% of the time which is clearly not
+practical. In the next section, we try to improve our system by using
+different and more training data.
+
+\section{Different training data}
+
+We first used our optimal parameters from Part 1 and trained new models using
+the following training sets:
+
+\begin{itemize}
+  \item 10 male speakers
+  \item 10 female speakers
+  \item 5 male and 5 female speakers
+  \item 55 male and 57 female speakers
+\end{itemize}
+
+The results are presented in Table~\ref{tab:wer-all}\@. First, we can see that training only
+on female speakers seems to work better than training only on male speakers.
+There are two possible explanations for that. Either the test set contains
+more female speakers than male speakers or the set of female speakers has more
+variability than the set of male speakers. In such a small random sample it is
+not unlikely that there is for example a greater variety of accents in the
+female sample.
+
+Further, we can see that including both male and female speakers decreases the
+error rate by more than 70\% compared to only using female speakers. This is not
+surprising as we have speakers of both gender in our test set, so the training
+data is more similar to the test data.
+
+If we include a lot more training examples as it is the case in training set 4,
+we see another small gain over the small mixed-gender set. The larger training
+error is probably caused by the larger variety in the training set but the fact
+that the training error and the test error are almost the same indicates that
+the training data is well suited to train a model that works well on a large
+test set.
+
+\begin{table}\centering
+  \begin{tabular}{@{}rcrrcrrcrrr@{}}\toprule%
+    \multirow{2}{*}{Dataset} & \phantom{a} & \multicolumn{2}{c}{train}
+    & \phantom{a} & \multicolumn{2}{c}{test} & \phantom{a}
+    & \multicolumn{3}{c}{changes}\\
+    \cmidrule{3-4} \cmidrule{6-7} \cmidrule{9-11}
+    && WER & SER && WER & SER && Ins & Del & Sub\\ \midrule%
+    male && 1.55 & 1.82 && 6.79 & 14.86 && 367 & 376 & 1198\\
+    female && 0.76 & 2.11 && 5.35 & 12.34 && 204 & 420 & 905\\
+    mixed && 0.55 & 1.82 && 1.51 & 4.57 && 116 & 200 & 115\\
+    full && 1.04 & 3.11 && 1.47 & 4.23 && 138 & 128 & 154\\
+    \bottomrule
+  \end{tabular}
+  \caption{Error rates for all datasets}\label{tab:wer-all}
+\end{table}
+
+We also did some parameter tuning for test sets 2 through 4. The optimal
+parameters and the corresponding test WER and SER are presented in
+Table~\ref{tab:wer-param}.
+
+\begin{table}\centering
+  \begin{tabular}{@{}rcrrrrrcrr@{}}\toprule%
+    Dataset & \phantom{a} & \texttt{num\_iterations} & \texttt{boost\_silence}
+    & \texttt{totgauss} & \texttt{realign\_iters} & \texttt{max\_iter\_inc}
+    & \phantom{a} & WER & SER\\ \midrule%
+    1 && 20 & 0.5 & 256 & 1:1:19 & 19 && 6.79 & 14.86\\
+    2 && 20 & 0.5 & 512 & 1:1:19 & 19 && 5.2 & 11.72\\
+    3 && 20 & 0.75 & 256 & 1:1:19 & 19 && 1.7 & 4.95\\
+    4 && 20 & 1.5 & 2048 & 1:1:19 & 10 && 0.83 & 2.57\\
+  \end{tabular}
+  \caption{Error rates with various parameters tuned}\label{tab:wer-param}
+\end{table}
+
+These results indicate a few trends. First, the more data we add and the more
+representative data we have, the more gaussians we can use to estimate the
+model. Also, we got better results in case we set the last iteration at which
+the number of gaussians is increased to a lower value for the more general data
+sets 3 and 4. This indicates that if the training data is more representative,
+then we want to fit the gaussians for more iterations to the training data
+instead of generating more and more gaussians that we only fit for fewer
+iterations. Lastly, in case we have better data to train the phones on, it seems
+to help to increase the boost_silence parameter.
+
+By using a larger and  more representative data set we were able to lower the
+WER to 0.83. At this error rate, a bank customer would have to repeat a 16-digit
+number on average in only 12\% of the cases which makes the system a lot more
+practical.
+
+\end{document}
